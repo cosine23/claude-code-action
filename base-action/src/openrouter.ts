@@ -1,4 +1,4 @@
-const DEFAULT_OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1";
+const DEFAULT_OPENROUTER_BASE_URL = "https://openrouter.ai/api";
 
 type HeaderEntry = {
   name: string;

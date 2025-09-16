@@ -53,7 +53,7 @@ inputs:
     description: "OpenRouter API key (enables OpenRouter provider; overrides anthropic_api_key)"
     required: false
   openrouter_base_url:
-    description: "Optional override for the OpenRouter API base URL (defaults to https://openrouter.ai/api/v1)"
+    description: "Optional override for the OpenRouter API base URL (defaults to https://openrouter.ai/api)"
     required: false
     default: ""
   openrouter_site_url:

@@ -32,7 +32,7 @@ describe("configureOpenRouterEnvironment", () => {
 
     configureOpenRouterEnvironment();
 
-    expect(process.env.ANTHROPIC_BASE_URL).toBe("https://openrouter.ai/api/v1");
+    expect(process.env.ANTHROPIC_BASE_URL).toBe("https://openrouter.ai/api");
     expect(process.env.ANTHROPIC_API_KEY).toBe("test-key");
     expect(process.env.ANTHROPIC_CUSTOM_HEADERS).toContain(
       "Authorization: Bearer test-key",

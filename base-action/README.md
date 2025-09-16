@@ -103,7 +103,7 @@ Add the following to your workflow file:
 | `anthropic_api_key`       | Anthropic API key (required for direct Anthropic API)                                             | No       | ''                           |
 | `claude_code_oauth_token` | Claude Code OAuth token (alternative to anthropic_api_key)                                        | No       | ''                           |
 | `openrouter_api_key`      | OpenRouter API key (enables OpenRouter provider; overrides anthropic_api_key when set)            | No       | ''                           |
-| `openrouter_base_url`     | Optional override for the OpenRouter API base URL (defaults to `https://openrouter.ai/api/v1`)    | No       | ''                           |
+| `openrouter_base_url`     | Optional override for the OpenRouter API base URL (defaults to `https://openrouter.ai/api`)        | No       | ''                           |
 | `openrouter_site_url`     | Optional site URL sent as the `HTTP-Referer` header when using OpenRouter                         | No       | ''                           |
 | `openrouter_app_title`    | Optional site/app title sent as the `X-Title` header when using OpenRouter                        | No       | ''                           |
 | `openrouter_extra_headers` | Optional newline-separated headers merged into OpenRouter requests                                | No       | ''                           |
