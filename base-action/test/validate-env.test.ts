@@ -13,6 +13,12 @@ describe("validateEnvironmentVariables", () => {
     delete process.env.ANTHROPIC_API_KEY;
     delete process.env.CLAUDE_CODE_USE_BEDROCK;
     delete process.env.CLAUDE_CODE_USE_VERTEX;
+    delete process.env.CLAUDE_CODE_USE_OPENROUTER;
+    delete process.env.OPENROUTER_API_KEY;
+    delete process.env.OPENROUTER_BASE_URL;
+    delete process.env.OPENROUTER_SITE_URL;
+    delete process.env.OPENROUTER_APP_TITLE;
+    delete process.env.OPENROUTER_EXTRA_HEADERS;
     delete process.env.AWS_REGION;
     delete process.env.AWS_ACCESS_KEY_ID;
     delete process.env.AWS_SECRET_ACCESS_KEY;
@@ -39,6 +45,23 @@ describe("validateEnvironmentVariables", () => {
     test("should fail when ANTHROPIC_API_KEY is missing", () => {
       expect(() => validateEnvironmentVariables()).toThrow(
         "Either ANTHROPIC_API_KEY or CLAUDE_CODE_OAUTH_TOKEN is required when using direct Anthropic API.",
+      );
+    });
+  });
+
+  describe("OpenRouter", () => {
+    test("should pass when OpenRouter key is provided", () => {
+      process.env.CLAUDE_CODE_USE_OPENROUTER = "1";
+      process.env.OPENROUTER_API_KEY = "test-openrouter-key";
+
+      expect(() => validateEnvironmentVariables()).not.toThrow();
+    });
+
+    test("should fail when OpenRouter key is missing", () => {
+      process.env.CLAUDE_CODE_USE_OPENROUTER = "1";
+
+      expect(() => validateEnvironmentVariables()).toThrow(
+        "OPENROUTER_API_KEY is required when using the OpenRouter provider.",
       );
     });
   });
@@ -179,7 +202,20 @@ describe("validateEnvironmentVariables", () => {
       process.env.CLOUD_ML_REGION = "us-central1";
 
       expect(() => validateEnvironmentVariables()).toThrow(
-        "Cannot use both Bedrock and Vertex AI simultaneously. Please set only one provider.",
+        "Multiple providers configured. Please enable only one of OpenRouter, Bedrock, or Vertex AI.",
+      );
+    });
+
+    test("should fail when OpenRouter and Bedrock are enabled", () => {
+      process.env.CLAUDE_CODE_USE_OPENROUTER = "1";
+      process.env.CLAUDE_CODE_USE_BEDROCK = "1";
+      process.env.OPENROUTER_API_KEY = "test-openrouter-key";
+      process.env.AWS_REGION = "us-east-1";
+      process.env.AWS_ACCESS_KEY_ID = "test-access-key";
+      process.env.AWS_SECRET_ACCESS_KEY = "test-secret-key";
+
+      expect(() => validateEnvironmentVariables()).toThrow(
+        "Multiple providers configured. Please enable only one of OpenRouter, Bedrock, or Vertex AI.",
       );
     });
   });

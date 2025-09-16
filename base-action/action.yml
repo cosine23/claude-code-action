@@ -34,6 +34,26 @@ inputs:
     description: "Claude Code OAuth token (alternative to anthropic_api_key)"
     required: false
     default: ""
+  openrouter_api_key:
+    description: "OpenRouter API key (enables OpenRouter provider; overrides anthropic_api_key)"
+    required: false
+    default: ""
+  openrouter_base_url:
+    description: "Optional override for the OpenRouter API base URL (defaults to https://openrouter.ai/api/v1)"
+    required: false
+    default: ""
+  openrouter_site_url:
+    description: "Optional site URL sent via HTTP-Referer header when using OpenRouter"
+    required: false
+    default: ""
+  openrouter_app_title:
+    description: "Optional site/app title sent via X-Title header when using OpenRouter"
+    required: false
+    default: ""
+  openrouter_extra_headers:
+    description: "Optional newline-separated additional headers to send when using OpenRouter"
+    required: false
+    default: ""
   use_bedrock:
     description: "Use Amazon Bedrock with OIDC authentication instead of direct Anthropic API"
     required: false
@@ -128,13 +148,19 @@ runs:
         INPUT_PATH_TO_BUN_EXECUTABLE: ${{ inputs.path_to_bun_executable }}
 
         # Provider configuration
-        ANTHROPIC_API_KEY: ${{ inputs.anthropic_api_key }}
+        ANTHROPIC_API_KEY: ${{ inputs.openrouter_api_key != '' && inputs.openrouter_api_key || inputs.anthropic_api_key }}
         CLAUDE_CODE_OAUTH_TOKEN: ${{ inputs.claude_code_oauth_token }}
         ANTHROPIC_BASE_URL: ${{ env.ANTHROPIC_BASE_URL }}
         ANTHROPIC_CUSTOM_HEADERS: ${{ env.ANTHROPIC_CUSTOM_HEADERS }}
         # Only set provider flags if explicitly true, since any value (including "false") is truthy
         CLAUDE_CODE_USE_BEDROCK: ${{ inputs.use_bedrock == 'true' && '1' || '' }}
         CLAUDE_CODE_USE_VERTEX: ${{ inputs.use_vertex == 'true' && '1' || '' }}
+        CLAUDE_CODE_USE_OPENROUTER: ${{ inputs.openrouter_api_key != '' && '1' || '' }}
+        OPENROUTER_API_KEY: ${{ inputs.openrouter_api_key }}
+        OPENROUTER_BASE_URL: ${{ inputs.openrouter_base_url }}
+        OPENROUTER_SITE_URL: ${{ inputs.openrouter_site_url }}
+        OPENROUTER_APP_TITLE: ${{ inputs.openrouter_app_title }}
+        OPENROUTER_EXTRA_HEADERS: ${{ inputs.openrouter_extra_headers }}
 
         # AWS configuration
         AWS_REGION: ${{ env.AWS_REGION }}

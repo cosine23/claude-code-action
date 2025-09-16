@@ -23,6 +23,10 @@ jobs:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
           # Or use OAuth token instead:
           # claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          # Or use OpenRouter instead (supports optional metadata headers):
+          # openrouter_api_key: ${{ secrets.OPENROUTER_API_KEY }}
+          # openrouter_site_url: "https://yourdomain.com"
+          # openrouter_app_title: "GitHub Code Automation"
 
           # Optional: provide a prompt for automation workflows
           # prompt: "Review this PR for security issues"
@@ -51,6 +55,11 @@ jobs:
 | -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------- | ------------- |
 | `anthropic_api_key`              | Anthropic API key (required for direct API, not needed for Bedrock/Vertex)                                                                                                     | No\*     | -             |
 | `claude_code_oauth_token`        | Claude Code OAuth token (alternative to anthropic_api_key)                                                                                                                     | No\*     | -             |
+| `openrouter_api_key`             | OpenRouter API key (enables OpenRouter provider; overrides anthropic_api_key when set)                                                                                        | No\*     | -             |
+| `openrouter_base_url`            | Optional override for the OpenRouter API base URL (defaults to `https://openrouter.ai/api/v1`)                                                                                | No       | `""`          |
+| `openrouter_site_url`            | Optional site URL sent as the `HTTP-Referer` header for OpenRouter usage                                                                                                      | No       | `""`          |
+| `openrouter_app_title`           | Optional site/app title sent as the `X-Title` header for OpenRouter usage                                                                                                     | No       | `""`          |
+| `openrouter_extra_headers`       | Optional newline-separated headers merged into OpenRouter requests (e.g., `X-Experiment: beta`)                                                                              | No       | `""`          |
 | `prompt`                         | Instructions for Claude. Can be a direct prompt or custom template for automation workflows                                                                                    | No       | -             |
 | `track_progress`                 | Force tag mode with tracking comments. Only works with specific PR/issue events. Preserves GitHub context                                                                      | No       | `false`       |
 | `claude_args`                    | Additional arguments to pass directly to Claude CLI (e.g., `--max-turns 10 --model claude-4-0-sonnet-20250805`)                                                                | No       | ""            |

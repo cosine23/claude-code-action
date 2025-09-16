@@ -5,9 +5,11 @@ import { preparePrompt } from "./prepare-prompt";
 import { runClaude } from "./run-claude";
 import { setupClaudeCodeSettings } from "./setup-claude-code-settings";
 import { validateEnvironmentVariables } from "./validate-env";
+import { configureOpenRouterEnvironment } from "./openrouter";
 
 async function run() {
   try {
+    configureOpenRouterEnvironment();
     validateEnvironmentVariables();
 
     await setupClaudeCodeSettings(

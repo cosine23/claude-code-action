@@ -126,6 +126,17 @@ anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
 This applies to all sensitive values including API keys, access tokens, and credentials.
 We also recommend that you always use short-lived tokens when possible
 
+To use OpenRouter instead of the direct Anthropic API:
+
+1. Add your OpenRouter API key as a repository secret (for example `OPENROUTER_API_KEY`).
+2. Reference the secret in your workflow and optionally include referral metadata:
+   ```yaml
+   openrouter_api_key: ${{ secrets.OPENROUTER_API_KEY }}
+   openrouter_site_url: "https://yourdomain.com"
+   openrouter_app_title: "GitHub Code Automation"
+   ```
+3. You can also set `openrouter_base_url` if you are using a self-hosted proxy or add `openrouter_extra_headers` for additional request metadata.
+
 ## Setting Up GitHub Secrets
 
 1. Go to your repository's Settings

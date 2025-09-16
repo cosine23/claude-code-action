@@ -1,25 +1,30 @@
 /**
  * Validates the environment variables required for running Claude Code
- * based on the selected provider (Anthropic API, AWS Bedrock, or Google Vertex AI)
+ * based on the selected provider (Anthropic API, OpenRouter, AWS Bedrock, or Google Vertex AI)
  */
 export function validateEnvironmentVariables() {
   const useBedrock = process.env.CLAUDE_CODE_USE_BEDROCK === "1";
   const useVertex = process.env.CLAUDE_CODE_USE_VERTEX === "1";
+  const useOpenRouter = process.env.CLAUDE_CODE_USE_OPENROUTER === "1";
   const anthropicApiKey = process.env.ANTHROPIC_API_KEY;
   const claudeCodeOAuthToken = process.env.CLAUDE_CODE_OAUTH_TOKEN;
+  const openRouterApiKey = process.env.OPENROUTER_API_KEY;
 
   const errors: string[] = [];
 
-  if (useBedrock && useVertex) {
+  const providerCount = [useBedrock, useVertex, useOpenRouter].filter(Boolean)
+    .length;
+
+  if (providerCount > 1) {
     errors.push(
-      "Cannot use both Bedrock and Vertex AI simultaneously. Please set only one provider.",
+      "Multiple providers configured. Please enable only one of OpenRouter, Bedrock, or Vertex AI.",
     );
   }
 
-  if (!useBedrock && !useVertex) {
-    if (!anthropicApiKey && !claudeCodeOAuthToken) {
+  if (useOpenRouter) {
+    if (!openRouterApiKey) {
       errors.push(
-        "Either ANTHROPIC_API_KEY or CLAUDE_CODE_OAUTH_TOKEN is required when using direct Anthropic API.",
+        "OPENROUTER_API_KEY is required when using the OpenRouter provider.",
       );
     }
   } else if (useBedrock) {
@@ -45,6 +50,12 @@ export function validateEnvironmentVariables() {
         errors.push(`${key} is required when using Google Vertex AI.`);
       }
     });
+  } else {
+    if (!anthropicApiKey && !claudeCodeOAuthToken) {
+      errors.push(
+        "Either ANTHROPIC_API_KEY or CLAUDE_CODE_OAUTH_TOKEN is required when using direct Anthropic API.",
+      );
+    }
   }
 
   if (errors.length > 0) {
