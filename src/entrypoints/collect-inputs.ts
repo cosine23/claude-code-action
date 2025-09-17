@@ -27,6 +27,7 @@ export function collectActionInputsPresence(): void {
     openrouter_site_url: "",
     openrouter_app_title: "",
     openrouter_extra_headers: "",
+    openrouter_additional_models: "",
     github_token: "",
     max_turns: "",
     use_sticky_comment: "false",

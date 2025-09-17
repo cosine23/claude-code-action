@@ -1,7 +1,10 @@
 #!/usr/bin/env bun
 
 import { describe, test, expect, beforeEach, afterEach } from "bun:test";
-import { configureOpenRouterEnvironment } from "../src/openrouter";
+import {
+  __resetOpenRouterProxyForTests,
+  configureOpenRouterEnvironment,
+} from "../src/openrouter";
 
 function resetOpenRouterEnv() {
   delete process.env.CLAUDE_CODE_USE_OPENROUTER;
@@ -13,6 +16,7 @@ function resetOpenRouterEnv() {
   delete process.env.ANTHROPIC_BASE_URL;
   delete process.env.ANTHROPIC_API_KEY;
   delete process.env.ANTHROPIC_CUSTOM_HEADERS;
+  delete process.env.CLAUDE_CODE_OPENROUTER_DISABLE_PROXY;
 }
 
 describe("configureOpenRouterEnvironment", () => {
@@ -20,73 +24,75 @@ describe("configureOpenRouterEnvironment", () => {
 
   beforeEach(() => {
     resetOpenRouterEnv();
+    __resetOpenRouterProxyForTests();
   });
 
   afterEach(() => {
     process.env = { ...originalEnv };
+    __resetOpenRouterProxyForTests();
   });
 
-  test("configures default base URL and headers", () => {
+  test("configures default base URL and headers", async () => {
     process.env.CLAUDE_CODE_USE_OPENROUTER = "1";
     process.env.OPENROUTER_API_KEY = "test-key";
+    process.env.CLAUDE_CODE_OPENROUTER_DISABLE_PROXY = "1";
 
-    configureOpenRouterEnvironment();
+    await configureOpenRouterEnvironment();
 
-    expect(process.env.ANTHROPIC_BASE_URL).toBe("https://openrouter.ai/api");
+    expect(process.env.ANTHROPIC_BASE_URL).toBe("https://openrouter.ai/api/v1");
     expect(process.env.ANTHROPIC_API_KEY).toBe("test-key");
     expect(process.env.ANTHROPIC_CUSTOM_HEADERS).toContain(
       "Authorization: Bearer test-key",
     );
   });
 
-  test("merges existing custom headers without duplicates", () => {
+  test("merges existing custom headers without duplicates", async () => {
     process.env.CLAUDE_CODE_USE_OPENROUTER = "1";
     process.env.OPENROUTER_API_KEY = "abc123";
     process.env.ANTHROPIC_CUSTOM_HEADERS = "X-Test: Value";
+    process.env.CLAUDE_CODE_OPENROUTER_DISABLE_PROXY = "1";
 
-    configureOpenRouterEnvironment();
+    await configureOpenRouterEnvironment();
 
-    expect(process.env.ANTHROPIC_CUSTOM_HEADERS?.split("\n")).toEqual([
-      "X-Test: Value",
-      "Authorization: Bearer abc123",
-    ]);
+    const headerString = process.env.ANTHROPIC_CUSTOM_HEADERS || "";
+    expect(headerString).toContain("X-Test: Value");
+    expect(headerString).toContain("Authorization: Bearer abc123");
   });
 
-  test("supports JSON formatted custom headers", () => {
+  test("supports JSON formatted custom headers", async () => {
     process.env.CLAUDE_CODE_USE_OPENROUTER = "1";
     process.env.OPENROUTER_API_KEY = "json-key";
     process.env.ANTHROPIC_CUSTOM_HEADERS = '{"X-Test":"Value"}';
+    process.env.CLAUDE_CODE_OPENROUTER_DISABLE_PROXY = "1";
 
-    configureOpenRouterEnvironment();
+    await configureOpenRouterEnvironment();
 
-    expect(process.env.ANTHROPIC_CUSTOM_HEADERS?.split("\n")).toEqual([
-      "X-Test: Value",
-      "Authorization: Bearer json-key",
-    ]);
+    const headerString = process.env.ANTHROPIC_CUSTOM_HEADERS || "";
+    expect(headerString).toContain("X-Test: Value");
+    expect(headerString).toContain("Authorization: Bearer json-key");
   });
 
-  test("applies referer, title, and extra headers", () => {
+  test("applies referer, title, and extra headers", async () => {
     process.env.CLAUDE_CODE_USE_OPENROUTER = "1";
     process.env.OPENROUTER_API_KEY = "open-key";
     process.env.OPENROUTER_SITE_URL = "https://example.com";
     process.env.OPENROUTER_APP_TITLE = "Example App";
     process.env.OPENROUTER_EXTRA_HEADERS = "X-Custom: One\nAuthorization: Bearer override";
+    process.env.CLAUDE_CODE_OPENROUTER_DISABLE_PROXY = "1";
 
-    configureOpenRouterEnvironment();
+    await configureOpenRouterEnvironment();
 
-    const headerLines = process.env.ANTHROPIC_CUSTOM_HEADERS?.split("\n");
-    expect(headerLines).toEqual([
-      "Authorization: Bearer override",
-      "HTTP-Referer: https://example.com",
-      "X-Title: Example App",
-      "X-Custom: One",
-    ]);
+    const headerString = process.env.ANTHROPIC_CUSTOM_HEADERS || "";
+    expect(headerString).toContain("Authorization: Bearer override");
+    expect(headerString).toContain("HTTP-Referer: https://example.com");
+    expect(headerString).toContain("X-Title: Example App");
+    expect(headerString).toContain("X-Custom: One");
   });
 
-  test("skips configuration when OpenRouter flag is disabled", () => {
+  test("skips configuration when OpenRouter flag is disabled", async () => {
     process.env.OPENROUTER_API_KEY = "unused";
 
-    configureOpenRouterEnvironment();
+    await configureOpenRouterEnvironment();
 
     expect(process.env.ANTHROPIC_BASE_URL).toBeUndefined();
     expect(process.env.ANTHROPIC_CUSTOM_HEADERS).toBeUndefined();

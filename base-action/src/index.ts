@@ -9,7 +9,7 @@ import { configureOpenRouterEnvironment } from "./openrouter";
 
 async function run() {
   try {
-    configureOpenRouterEnvironment();
+    await configureOpenRouterEnvironment();
     validateEnvironmentVariables();
 
     await setupClaudeCodeSettings(

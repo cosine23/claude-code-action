@@ -39,7 +39,7 @@ inputs:
     required: false
     default: ""
   openrouter_base_url:
-    description: "Optional override for the OpenRouter API base URL (defaults to https://openrouter.ai/api)"
+    description: "Optional override for the OpenRouter API base URL (defaults to https://openrouter.ai/api/v1)"
     required: false
     default: ""
   openrouter_site_url:
@@ -52,6 +52,10 @@ inputs:
     default: ""
   openrouter_extra_headers:
     description: "Optional newline-separated additional headers to send when using OpenRouter"
+    required: false
+    default: ""
+  openrouter_additional_models:
+    description: "Optional newline or comma-separated list of extra model IDs to register with the OpenRouter proxy"
     required: false
     default: ""
   use_bedrock:
@@ -161,6 +165,7 @@ runs:
         OPENROUTER_SITE_URL: ${{ inputs.openrouter_site_url }}
         OPENROUTER_APP_TITLE: ${{ inputs.openrouter_app_title }}
         OPENROUTER_EXTRA_HEADERS: ${{ inputs.openrouter_extra_headers }}
+        OPENROUTER_ADDITIONAL_MODELS: ${{ inputs.openrouter_additional_models }}
 
         # AWS configuration
         AWS_REGION: ${{ env.AWS_REGION }}

@@ -1,4 +1,6 @@
-const DEFAULT_OPENROUTER_BASE_URL = "https://openrouter.ai/api";
+import { startOpenRouterProxy } from "./openrouter-proxy";
+
+const DEFAULT_REMOTE_BASE_URL = "https://openrouter.ai/api/v1";
 
 type HeaderEntry = {
   name: string;
@@ -26,7 +28,7 @@ function parseHeaderLines(raw?: string | null): Map<string, HeaderEntry> {
       }
       return map;
     } catch (error) {
-      // Fall back to line parsing if JSON parsing fails
+      // fall through to line parsing
     }
   }
 
@@ -53,12 +55,6 @@ function parseHeaderLines(raw?: string | null): Map<string, HeaderEntry> {
   return map;
 }
 
-function serializeHeaders(headers: Map<string, HeaderEntry>): string {
-  return Array.from(headers.values())
-    .map((entry) => `${entry.name}: ${entry.value}`)
-    .join("\n");
-}
-
 function setHeader(
   headers: Map<string, HeaderEntry>,
   name: string,
@@ -67,50 +63,136 @@ function setHeader(
   headers.set(name.toLowerCase(), { name, value });
 }
 
+function serializeHeaders(headers: Map<string, HeaderEntry>): string {
+  return Array.from(headers.values())
+    .map((entry) => `${entry.name}: ${entry.value}`)
+    .join("\n");
+}
+
+let proxyInitialized = false;
+
+export function __resetOpenRouterProxyForTests() {
+  proxyInitialized = false;
+}
+
+function extractModelFromClaudeArgs(args?: string): string | undefined {
+  if (!args) return undefined;
+  const modelMatch = args.match(/--model\s+([^\s]+)/);
+  if (modelMatch) {
+    return modelMatch[1];
+  }
+  return undefined;
+}
+
+function parseAdditionalModels(raw?: string | null): string[] {
+  if (!raw) {
+    return [];
+  }
+  return raw
+    .split(/[\n,]/)
+    .map((value) => value.trim())
+    .filter((value) => value.length > 0);
+}
+
+function registerCleanup(stop: () => Promise<void>) {
+  const cleanup = async () => {
+    try {
+      await stop();
+    } catch (error) {
+      console.error("Failed to stop OpenRouter proxy:", error);
+    }
+  };
+
+  process.once("exit", () => {
+    cleanup().catch(() => {
+      // ignore errors during exit
+    });
+  });
+  process.once("SIGINT", () => {
+    cleanup().then(() => process.exit(130));
+  });
+  process.once("SIGTERM", () => {
+    cleanup().then(() => process.exit(143));
+  });
+}
+
 /**
  * Configure Claude Code environment variables for OpenRouter compatibility.
+ * Starts a local LiteLLM proxy that translates Anthropic API requests into
+ * OpenRouter-compatible chat completions.
  */
-export function configureOpenRouterEnvironment() {
+export async function configureOpenRouterEnvironment(): Promise<void> {
+  if (proxyInitialized) {
+    return;
+  }
+
   if (process.env.CLAUDE_CODE_USE_OPENROUTER !== "1") {
     return;
   }
 
   const openRouterKey = process.env.OPENROUTER_API_KEY;
   if (!openRouterKey) {
-    // Validation will surface the missing key; nothing to configure.
+    console.warn(
+      "CLAUDE_CODE_USE_OPENROUTER is set but OPENROUTER_API_KEY is missing",
+    );
     return;
   }
 
-  const baseUrl =
-    process.env.OPENROUTER_BASE_URL && process.env.OPENROUTER_BASE_URL.trim().length
-      ? process.env.OPENROUTER_BASE_URL.trim()
-      : DEFAULT_OPENROUTER_BASE_URL;
+  const remoteBaseUrl =
+    process.env.OPENROUTER_BASE_URL?.trim() || DEFAULT_REMOTE_BASE_URL;
 
-  process.env.ANTHROPIC_BASE_URL = baseUrl;
+  if (process.env.CLAUDE_CODE_OPENROUTER_DISABLE_PROXY === "1") {
+    if (!process.env.ANTHROPIC_API_KEY) {
+      process.env.ANTHROPIC_API_KEY = openRouterKey;
+    }
 
-  // Ensure the Anthropic key env is set so the Claude CLI continues to launch.
-  if (!process.env.ANTHROPIC_API_KEY) {
-    process.env.ANTHROPIC_API_KEY = openRouterKey;
+    const headers = parseHeaderLines(process.env.ANTHROPIC_CUSTOM_HEADERS);
+    setHeader(headers, "Authorization", `Bearer ${openRouterKey}`);
+
+    const referer = process.env.OPENROUTER_SITE_URL?.trim();
+    if (referer) {
+      setHeader(headers, "HTTP-Referer", referer);
+    }
+
+    const title = process.env.OPENROUTER_APP_TITLE?.trim();
+    if (title) {
+      setHeader(headers, "X-Title", title);
+    }
+
+    const extraHeaders = parseHeaderLines(process.env.OPENROUTER_EXTRA_HEADERS);
+    for (const [key, entry] of extraHeaders.entries()) {
+      headers.set(key, entry);
+    }
+
+    process.env.ANTHROPIC_CUSTOM_HEADERS = serializeHeaders(headers);
+    process.env.ANTHROPIC_BASE_URL = remoteBaseUrl;
+    proxyInitialized = true;
+    return;
   }
 
-  const headerEntries = parseHeaderLines(process.env.ANTHROPIC_CUSTOM_HEADERS);
+  const preferredModel =
+    process.env.ANTHROPIC_MODEL?.trim() ||
+    extractModelFromClaudeArgs(process.env.INPUT_CLAUDE_ARGS);
 
-  setHeader(headerEntries, "Authorization", `Bearer ${openRouterKey}`);
+  const additionalModels = parseAdditionalModels(
+    process.env.OPENROUTER_ADDITIONAL_MODELS,
+  );
 
-  const referer = process.env.OPENROUTER_SITE_URL?.trim();
-  if (referer) {
-    setHeader(headerEntries, "HTTP-Referer", referer);
-  }
+  const proxy = await startOpenRouterProxy({
+    apiKey: openRouterKey,
+    baseUrl: remoteBaseUrl,
+    siteUrl: process.env.OPENROUTER_SITE_URL,
+    appTitle: process.env.OPENROUTER_APP_TITLE,
+    extraHeaders: process.env.OPENROUTER_EXTRA_HEADERS,
+    preferredModel,
+    additionalModels,
+  });
 
-  const title = process.env.OPENROUTER_APP_TITLE?.trim();
-  if (title) {
-    setHeader(headerEntries, "X-Title", title);
-  }
+  process.env.ANTHROPIC_BASE_URL = proxy.baseUrl;
+  process.env.ANTHROPIC_API_KEY = proxy.masterKey;
+  delete process.env.ANTHROPIC_CUSTOM_HEADERS;
 
-  const extraHeaders = parseHeaderLines(process.env.OPENROUTER_EXTRA_HEADERS);
-  for (const [key, entry] of extraHeaders.entries()) {
-    headerEntries.set(key, entry);
-  }
+  registerCleanup(proxy.stop);
 
-  process.env.ANTHROPIC_CUSTOM_HEADERS = serializeHeaders(headerEntries);
+  proxyInitialized = true;
 }

@@ -103,15 +103,18 @@ Add the following to your workflow file:
 | `anthropic_api_key`       | Anthropic API key (required for direct Anthropic API)                                             | No       | ''                           |
 | `claude_code_oauth_token` | Claude Code OAuth token (alternative to anthropic_api_key)                                        | No       | ''                           |
 | `openrouter_api_key`      | OpenRouter API key (enables OpenRouter provider; overrides anthropic_api_key when set)            | No       | ''                           |
-| `openrouter_base_url`     | Optional override for the OpenRouter API base URL (defaults to `https://openrouter.ai/api`)        | No       | ''                           |
+| `openrouter_base_url`     | Optional override for the OpenRouter API base URL (defaults to `https://openrouter.ai/api/v1`)     | No       | ''                           |
 | `openrouter_site_url`     | Optional site URL sent as the `HTTP-Referer` header when using OpenRouter                         | No       | ''                           |
 | `openrouter_app_title`    | Optional site/app title sent as the `X-Title` header when using OpenRouter                        | No       | ''                           |
 | `openrouter_extra_headers` | Optional newline-separated headers merged into OpenRouter requests                                | No       | ''                           |
+| `openrouter_additional_models` | Optional newline or comma-separated list of extra model IDs to register with the OpenRouter proxy | No       | ''                           |
 | `use_bedrock`             | Use Amazon Bedrock with OIDC authentication instead of direct Anthropic API                       | No       | 'false'                      |
 | `use_vertex`              | Use Google Vertex AI with OIDC authentication instead of direct Anthropic API                     | No       | 'false'                      |
 | `use_node_cache`          | Whether to use Node.js dependency caching (set to true only for Node.js projects with lock files) | No       | 'false'                      |
 
 \*Either `prompt` or `prompt_file` must be provided, but not both.
+
+Using OpenRouter triggers a lightweight [LiteLLM](https://github.com/BerriAI/litellm) proxy on the runner. The proxy exposes Anthropic-style `/v1/messages` endpoints for the Claude CLI while forwarding traffic to OpenRouter's OpenAI-compatible `/api/v1` API. The proxy pre-registers several common Claude models; specify any additional IDs via `openrouter_additional_models` if you need more.
 
 ## Outputs
 

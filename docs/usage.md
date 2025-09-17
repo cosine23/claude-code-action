@@ -56,10 +56,11 @@ jobs:
 | `anthropic_api_key`              | Anthropic API key (required for direct API, not needed for Bedrock/Vertex)                                                                                                     | No\*     | -             |
 | `claude_code_oauth_token`        | Claude Code OAuth token (alternative to anthropic_api_key)                                                                                                                     | No\*     | -             |
 | `openrouter_api_key`             | OpenRouter API key (enables OpenRouter provider; overrides anthropic_api_key when set)                                                                                        | No\*     | -             |
-| `openrouter_base_url`            | Optional override for the OpenRouter API base URL (defaults to `https://openrouter.ai/api`)                                                                                  | No       | `""`          |
+| `openrouter_base_url`            | Optional override for the OpenRouter API base URL (defaults to `https://openrouter.ai/api/v1`)                                                                              | No       | `""`          |
 | `openrouter_site_url`            | Optional site URL sent as the `HTTP-Referer` header for OpenRouter usage                                                                                                      | No       | `""`          |
 | `openrouter_app_title`           | Optional site/app title sent as the `X-Title` header for OpenRouter usage                                                                                                     | No       | `""`          |
 | `openrouter_extra_headers`       | Optional newline-separated headers merged into OpenRouter requests (e.g., `X-Experiment: beta`)                                                                              | No       | `""`          |
+| `openrouter_additional_models`   | Optional newline or comma-separated list of additional OpenRouter model IDs to pre-register with the local proxy                                                             | No       | `""`          |
 | `prompt`                         | Instructions for Claude. Can be a direct prompt or custom template for automation workflows                                                                                    | No       | -             |
 | `track_progress`                 | Force tag mode with tracking comments. Only works with specific PR/issue events. Preserves GitHub context                                                                      | No       | `false`       |
 | `claude_args`                    | Additional arguments to pass directly to Claude CLI (e.g., `--max-turns 10 --model claude-4-0-sonnet-20250805`)                                                                | No       | ""            |
@@ -230,3 +231,4 @@ Upload a screenshot of a bug and ask Claude to fix it:
 ```
 
 Claude can see and analyze images, making it easy to fix visual bugs or UI issues.
+When `openrouter_api_key` is supplied, the action launches an internal [LiteLLM](https://github.com/BerriAI/litellm) proxy on the runner. The proxy exposes the Anthropic `/v1/messages` API expected by the Claude CLI and forwards requests to OpenRouter's OpenAI-compatible `/api/v1` endpoints. If you need models beyond the defaults, provide a newline- or comma-separated list via the `openrouter_additional_models` input or `OPENROUTER_ADDITIONAL_MODELS` environment variable.

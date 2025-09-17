@@ -14,6 +14,7 @@ A general-purpose [Claude Code](https://claude.ai/code) action for GitHub PRs an
 - 🛠️ **Flexible Tool Access**: Access to GitHub APIs and file operations (additional tools can be enabled via configuration)
 - 📋 **Progress Tracking**: Visual progress indicators with checkboxes that dynamically update as Claude completes tasks
 - 🏃 **Runs on Your Infrastructure**: The action executes entirely on your own GitHub runner (Anthropic API calls go to your chosen provider)
+- 🔌 **Built-in OpenRouter Proxy**: Seamlessly bridges the Claude CLI's Anthropic endpoint to OpenRouter's OpenAI-compatible API with an on-runner LiteLLM proxy
 - ⚙️ **Simplified Configuration**: Unified `prompt` and `claude_args` inputs provide clean, powerful configuration aligned with Claude Code SDK
 
 ## 📦 Upgrading from v0.x?

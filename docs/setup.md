@@ -136,6 +136,8 @@ To use OpenRouter instead of the direct Anthropic API:
    openrouter_app_title: "GitHub Code Automation"
    ```
 3. You can also set `openrouter_base_url` if you are using a self-hosted proxy or add `openrouter_extra_headers` for additional request metadata.
+4. If you plan to request models other than the defaults (`anthropic/claude-sonnet-4`, `anthropic/claude-3.5-sonnet`, `anthropic/claude-3.5-haiku`, `anthropic/claude-3.5-sonnet-20241022`, `anthropic/claude-3.5-haiku-20241022`, `anthropic/claude-3-opus-20240229`), provide them via the `openrouter_additional_models` input (newline or comma-separated) so the on-runner proxy can route them properly.
+5. The proxy relies on Python 3 and pip being available on the runner; GitHub-hosted runners ship with both preinstalled.
 
 ## Setting Up GitHub Secrets
 
